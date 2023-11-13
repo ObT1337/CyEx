@@ -9,7 +9,7 @@ _LOG_LEVEL = DEBUG
 
 _LOG_FORMAT = _LOG_DEFAULT_FORMAT
 F_LOG_LEVEL = _LOG_LEVEL
-C_LOG_LEVEL = INFO
+C_LOG_LEVEL = DEBUG
 
 _WORKING_DIR = os.path.dirname(os.path.abspath(__file__))
 _THIS_EXT = os.path.join(_WORKING_DIR, "..")

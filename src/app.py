@@ -1,6 +1,5 @@
 import json
 import multiprocessing as mp
-import os
 
 import flask
 import GlobalData as GD
@@ -16,6 +15,7 @@ from . import workflows as wf
 from .classes import LayoutAlgorithms
 from .send_to_cytoscape import send_to_cytoscape
 from .settings import log
+
 url_prefix = "/CyEx"
 
 blueprint = IOBlueprint(
@@ -29,12 +29,14 @@ blueprint = IOBlueprint(
 column_4 = ["cyEx_send_module.html"]
 upload_tabs = []
 
-my_util.pepare_uploader()
+my_util.prepare_uploader()
 my_util.move_on_boot()
 
 
 @blueprint.before_app_first_request
-# Execute before first request
+def cy_ex_setup():
+    pass
+    # Execute before first request
 
 
 @blueprint.route("/uploadfiles", methods=["GET", "POST"])
@@ -45,7 +47,6 @@ def string_ex_upload_files() -> str:
         str: A status giving information whether the upload was successful or not.
     """
     return routes.upload_files()
-
 
 
 @blueprint.route("/receiveNetwork", methods=["POST"])
@@ -122,6 +123,3 @@ def string_ex_algorithms(message):
     """Route to receive the algorithms from the VRNetzer backend. Will be used to update the algorithms in the CyEx extension."""
     message["data"] = LayoutAlgorithms.all_algos
     blueprint.emit("algorithms", message)
-
-
-

@@ -121,7 +121,7 @@ def clean_filename(name: str) -> str:
     return name
 
 
-def pepare_uploader() -> None:
+def prepare_uploader() -> None:
     """Adds extension specific data to GD.sessionData. Setup function to prepare the CyEx Uploader."""
     strinEx_config = {}
 

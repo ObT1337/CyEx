@@ -1,3 +1,4 @@
+__updated__ = "2023-11-13 15:46:19"
 import json
 import os
 import random
@@ -27,7 +28,8 @@ def send_to_cytoscape(
         message (dict): Message from the frontend.
         ip (str): Can be either the IP address of the client or the IP address of the server host.
         user (str): Username of the client.
-        return_dict (dict): Dictionary to store the return value. Is a multiprocessing dict to be able to return values from a subprocess.
+        return_dict (dict): Dictionary to store the return value. Is a
+        multiprocessing dict to be able to return values from a subprocess.
 
     Returns:
         dict: Dictionary with the status of the process stored in the return_dict.
@@ -41,10 +43,7 @@ def send_to_cytoscape(
     project = pfile["name"]
     selected_links = None  # TODO: Link selection from the utility extension
 
-    if selected_nodes is None:
-        return
-
-    if not selected_nodes or not isinstance(selected_nodes, list) :
+    if not selected_nodes or not isinstance(selected_nodes, list):
         selected_nodes = []
 
     if not selected_links or not isinstance(selected_links, list):
@@ -53,6 +52,7 @@ def send_to_cytoscape(
     assert selected_nodes != None, "Selected Nodes is None"
     assert selected_links != None, "Selected Links is None"
     if len(selected_nodes) == 0 and len(selected_links) == 0:
+        st.log.debug(return_dict)
         return
 
     port = 1234
@@ -73,15 +73,14 @@ def send_to_cytoscape(
             "message": f"Could not connect to Cytoscape at {base_url}. Please check if Cytoscape is running and if the url is correct. Is cyREST installed?",
             "status": "error",
         }
+        st.log.debug(return_dict)
         return
     if len(selected_nodes) == 0:
         st.log.debug("No nodes selected.")
         links, selected_nodes = extract_link_data(
             selected_nodes, selected_links, project
         )
-        nodes = extract_node_data(
-            selected_nodes, selected_links, project, layout, color
-        )
+        nodes = extract_node_data(selected_nodes, project, layout, color)
     else:
         nodes = extract_node_data(selected_nodes, project, layout, color)
         links, _ = extract_link_data(selected_nodes, selected_links, project)
@@ -181,6 +180,7 @@ def extract_node_data(
     project.read_names()
     nodes_data = pd.DataFrame(project.nodes["nodes"])
     nodes_data = nodes_data[nodes_data.index.isin(selected_nodes)].copy()
+    st.log.debug(nodes_data)
 
     if "layouts" in nodes_data.columns:
         nodes_data = nodes_data.drop(columns=["layouts"])
@@ -188,6 +188,8 @@ def extract_node_data(
     if "display name" in nodes_data.columns:
         nodes_data["name"] = nodes_data["display name"]
         nodes_data = nodes_data.drop(columns=["display name", NT.name])
+    else:
+        nodes_data["name"] = nodes_data["n"]
 
     # TODO: Find another way to extract the Uniprot ID if one is provided. Consider storing this information in a own parameter.
     # names = project.names["names"]
