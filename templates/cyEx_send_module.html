@@ -1,0 +1,34 @@
+<link rel="stylesheet" href="{{ url_for('CyEx.static', filename='css/CyExStyle.css') }}">
+<script src="{{ url_for('CyEx.static', filename='js/cyExSetupScript.js') }}"></script>
+<script src="{{ url_for('CyEx.static', filename='js/cyExSendLogic.js') }}"></script>
+
+<style>
+      input.loadingButton[type="button"] {
+            background-image: url("{{url_for('CyEx.static', filename='/img/processing.gif')}}");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-clip: content-box;
+            background-size: cover;
+            overflow: hidden;
+      }
+</style>
+<html>
+
+
+{% include 'cyEx_templates.html' %}
+
+<div id="CyExSendNetworkModule" class="gradientBox">
+      <div class='swagBox' style="background-color: rgba(0, 10, 20, 0.3);">
+            <div id="cyEexClientIP" value="{{ request.remote_addr }}"></div>
+            <h5 style="  float:left; font-size: 25px;  color: rgb(102, 102, 102);">
+                  Cytoscape Ex</h5>
+            <div class="gradient" style="margin-top:35px">
+            </div>
+            <div class="gradientBox" style="padding:5px">
+                  <cy-ex-send-element id="cyExtoHost" fn="checkbox" name="Send to host"
+                        buttonText="Send"></cy-ex-send-element>
+            </div>
+      </div>
+</div>
+
+</html>

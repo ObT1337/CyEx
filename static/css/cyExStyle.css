@@ -1,0 +1,140 @@
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Input Boxes
+++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+.cyExInputBox {
+    border: 10px solid transparent;
+    padding: 5px;
+    border-image: url("images/frame1.png") 10 stretch;
+    background-color: rgba(20, 20, 20, 1);
+    min-height: 58px;
+    min-width: 100%;
+    max-width: 100%;
+}
+
+.cyExInputBox:hover,
+.cyExInputBox:focus,
+.cyExInputBox:active {
+    background-color: #222222;
+}
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Buttons
+++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+/* 'Akshar-reg', sans-serif;
+font-family: 'Venus', sans-serif;*/
+
+.cyExEvidenceButton{
+    width: 100%;
+    max-height: 7.5vh;
+    min-height: 6.5vh;
+    border-width: 0.8vh;
+    border-radius: 20px;
+    border-style: solid;
+    border-color: rgba(2, 77, 114, 0.45);
+    font-family: 'Michr', sans-serif;
+    font-weight: bold;
+    font-size: 3.2vw;
+    margin: 2px;
+    font-style: normal;
+    color: white;
+    font-weight: lighter;
+    text-align: center;
+    overflow: hidden;
+}
+.strex_updateMessage{
+    color:green;
+    min-width: 20px;
+    line-height: 2.5vh;
+    height: 12vh;
+    opacity: 0;
+    transition: opacity 2s;
+    transition-timing-function: cubic-bezier(0, 2, 1, 0.58);
+    overflow: hidden;
+    font-size:2vh;
+}
+
+@media (min-width: 1920px) {
+    .cyExEvidenceButton{
+        font-size: 2vw;
+    }
+    .cyExEvidenceButton[type="WebGL Button"] {
+        font-size: 15px;
+    }
+    .noTopMargin {
+        font-size: 15px;
+    }
+}
+@media (min-width: 1280px) {
+    .cyExEvidenceButton[type="WebGL Button"] {
+        font-size: 10px;
+    }
+    .noTopMargin {
+        font-size: 10px;
+    }
+}
+@media (min-width: 800px) {
+    .cyExEvidenceButton [type="WebGL Button"]{
+        font-size: 8px;
+    }
+    .noTopMargin {
+        font-size: 8px;
+    }
+}
+@media (min-width: 500px) {
+    .cyExEvidenceButton{
+        font-size: 2.5vw;
+    }
+    .cyExEvidenceButton [type="WebGL Button"]{
+        font-size: 8px;
+    }
+    .noTopMargin {
+        font-size: 8px;
+    }
+}
+
+.cyExEvidenceButton[type="WebGL"] {
+    width: 100%;
+    border-width: 0.8vh;
+    border-radius: 20px;
+    border-color: rgba(2, 77, 114, 0.45);
+    font-family: 'Michr', sans-serif;
+
+    padding: 2px;
+    font-size: 2vh;
+    margin:5px;
+    font-style: normal;
+    color: white;
+    font-weight: lighter;
+    text-align: center;
+    overflow: hidden;
+    height: 4.5vh;
+}
+.todo{
+    color:violet;
+    opacity: 20%;
+    font-size: 24pt;
+}
+
+#main {
+    transition: margin-left .5s;
+    padding: 16px;
+}
+
+@media screen and (max-height: 450px) {
+    .sidenav {
+        padding-top: 15px;
+    }
+
+    .sidenav a {
+        font-size: 18px;
+    }
+}
+.ui-tooltip {
+    background-color: rgba(42, 113, 148);
+    ;
+    color: rgb(59, 20, 20);
+    border: 1px solid #333;
+    min-width: fit-content;
+    box-shadow: none;
+}
