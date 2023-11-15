@@ -16,28 +16,23 @@ from .classes import VRNetzElements as VRNE
 from .settings import log
 
 
-class Layouter:
+class LayoutGenerator:
     """Simple class to apply a 3D layout algorithm to a networkx graph."""
 
     graph: nx.Graph = nx.Graph()
+    network: dict = dict()
 
-    @staticmethod
-    def gen_graph(nodes: dict = None, links: dict = None) -> nx.Graph:
-        """Generates a networkx graph based on a dict of nodes and links.
+    def read_from_grahpml(self, file: str) -> nx.Graph:
+        """Read a graph from a graphml file.
 
         Args:
-            nodes (dict): contains all nodes that should be part of the graph with node ids as keys and nodes as values.
-            links (dict): contains all links that should be part of the graph with link ids as keys and links as values.
+            file (str): path to the graphml file.
 
         Returns:
             networkx.Graph: Graph for which the layouts will be generated.
         """
-        G = nx.Graph()
-        G.add_nodes_from([(idx, node.dropna()) for idx, node in nodes.iterrows()])
-        G.add_edges_from(
-            [(start, end) for start, end in links[[LiT.start, LiT.end]].values.tolist()]
-        )
-        return G
+        self.graph = nx.read_graphml(file)
+        return self.graph
 
     def read_from_vrnetz(self, file: str) -> nx.Graph:
         """Reads a graph from a VRNetz file.
@@ -77,19 +72,9 @@ class Layouter:
         """
         self.graph.nodes[node]["data"] = data
 
-    def read_from_grahpml(self, file: str) -> nx.Graph:
-        """Read a graph from a graphml file.
-
-        Args:
-            file (str): path to the graphml file.
-
-        Returns:
-            networkx.Graph: Graph for which the layouts will be generated.
-        """
-        self.graph = nx.read_graphml(file)
-        return self.graph
-
-    def create_spring_layout(self, algo_variables: dict, random_lay: bool) -> dict:
+    def create_spring_layout(
+        self, algo_variables: dict, random_lay: bool = False
+    ) -> dict:
         """Generates a spring layout for the Graph using the networkx spring_layout algorithm. All nodes without a link will be placed on a sphere around the center of the graph.
 
         Args:
@@ -109,12 +94,9 @@ class Layouter:
             "iterations": iterations,
             "threshold": threshold,
         }
-        return self.link_based_layout(nx.spring_layout, algo_variables, random_lay)
         if random_lay:
             return self.create_random_layout()
-        return nx.spring_layout(
-            self.graph, dim=3, k=k, iterations=iterations, threshold=threshold
-        )
+        return self.link_based_layout(nx.spring_layout, algo_variables, random_lay)
 
     def create_kamada_kawai_layout(self, algo_variables: dict, random_lay) -> dict:
         """Generates a kamada kawai layout for the Graph using the networkx kamada_kawai_layout algorithm. All nodes without a link will be placed on a sphere around the center of the graph.
@@ -124,12 +106,11 @@ class Layouter:
         Returns:
             dict: node ids as keys and three dimensional positions as values.
         """
+        if random_lay:
+            return self.create_random_layout()
         return self.link_based_layout(
             nx.kamada_kawai_layout, algo_variables, random_lay
         )
-        if random_lay:
-            return self.create_random_layout()
-        return nx.kamada_kawai_layout(self.graph, dim=3)
 
     def create_random_layout(self, graph=None, algo_variables: dict = {}) -> dict:
         """Generates a random layout for the Graph using the networkx random_layout algorithm.
@@ -279,10 +260,6 @@ class Layouter:
         )
         log.debug(f"Algo variables:{algo_variables}")
 
-        # # No Sphere
-        # has_links = G
-        # no_links = []
-
         if random_lay:
             layout = self.create_random_layout(has_links)
         else:
@@ -295,7 +272,7 @@ class Layouter:
 
     def apply_layout(
         self,
-        layout_algo: str = None,
+        layout_algo: str or list = None,
         algo_variables: dict = {},
         feature_matrices: list[pd.DataFrame] = None,
         max_num_features: int = None,
@@ -313,20 +290,20 @@ class Layouter:
         layouts = {}
         if isinstance(layout_algo, str):
             layout_algo = [layout_algo]
-        for idx, algo in enumerate(layout_algo):
+        if isinstance(algo_variables, dict):
+            algo_variables = [algo_variables]
+        for idx, (algo, variables) in enumerate(zip(layout_algo, algo_variables)):
             if algo is None:
                 """Select default layout algorithm"""
                 algo = LA.spring
             if LA.cartoGRAPH in algo:
                 log.debug(f"Applying layout: {algo}.", flush=True)
                 if feature_matrices is None:
-                    layout = self.create_cartoGRAPH_layout(
-                        algo, algo_variables, random_lay
-                    )
+                    layout = self.create_cartoGRAPH_layout(algo, variables, random_lay)
                 else:
                     layout = self.create_cartoGRAPH_layout(
                         algo,
-                        algo_variables,
+                        variables,
                         feature_matrices[idx],
                         max_num_features,
                         random_lay,
@@ -336,7 +313,7 @@ class Layouter:
                     log.error(
                         "Error in executing cartoGRAPHs layout. Create a layout with spring instead."
                     )
-                    layout = self.create_spring_layout(algo_variables)
+                    layout = self.create_spring_layout(variables)
             else:
                 lay_func = {
                     LA.spring: self.create_spring_layout,
@@ -345,7 +322,7 @@ class Layouter:
                 }
                 log.debug(f"Applying layout: {algo}", flush=True)
                 layout = lay_func[algo](
-                    algo_variables, random_lay
+                    variables, random_lay
                 )  # Will use the desired layout algorithm
             layouts[idx] = self.normalize_pos(layout)
         return layouts
@@ -373,8 +350,9 @@ class Layouter:
         return layout
 
     @staticmethod
-    def add_layout_to_vrnetz(
-        nodes: pd.DataFrame, layout: dict, layout_name: str
+    def add_layouts_to_vrnetz(
+        nodes: pd.DataFrame,
+        layouts: dict,
     ) -> pd.DataFrame:
         """Adds the points of the generated layout to the underlying VRNetz
 
@@ -385,6 +363,8 @@ class Layouter:
         Returns:
             pd.DataFrame: nodes data frame with added layout.
         """
+
+        ### If its an old VRNetz format this will change it to the new.
         if NT.layouts in nodes:
 
             def extract_cy(x):
@@ -398,18 +378,9 @@ class Layouter:
 
             nodes = nodes.swifter.progress_bar(False).apply(extract_cy, axis=1)
 
-        pos = np.array(list((layout.values())))
-        _2d_layout = pos[:, :2]
-        z_zero = np.zeros((len(layout), 1))
-        _2d_layout = np.hstack((_2d_layout, z_zero))
-
-        nodes[layout_name + "2d_pos"] = pd.Series(_2d_layout.tolist())
-        nodes[layout_name + "_pos"] = pd.Series(pos.tolist())
-
         if "cy_pos" and "cy_col" in nodes:
-            # Check if this works, as it now returns a np array
             coords = nodes["cy_pos"].to_dict()
-            pos = np.array(list(Layouter.normalize_pos(coords, dim=2).values()))
+            pos = np.array(list(LayoutGenerator.normalize_pos(coords, dim=2).values()))
             pos = np.hstack((pos, np.zeros((len(pos), 1))))
             nodes["cy_pos"] = pd.Series(pos.tolist())
 
@@ -428,8 +399,33 @@ class Layouter:
                 .apply(extract_color, axis=1)
             )
 
+        for name, l in layouts.items():
+            pos = np.array(list((l.values())))
+            _2d_layout = pos[:, :2]
+            z_zero = np.zeros((len(l), 1))
+            _2d_layout = np.hstack((_2d_layout, z_zero))
+
+            nodes[name + "2d_pos"] = pd.Series(_2d_layout.tolist())
+            nodes[name + "_pos"] = pd.Series(pos.tolist())
         return nodes
 
+    @staticmethod
+    def gen_graph(nodes: dict = None, links: dict = None) -> nx.Graph:
+        """Generates a networkx graph based on a dict of nodes and links.
+
+        Args:
+            nodes (dict): contains all nodes that should be part of the graph with node ids as keys and nodes as values.
+            links (dict): contains all links that should be part of the graph with link ids as keys and links as values.
+
+        Returns:
+            networkx.Graph: Graph for which the layouts will be generated.
+        """
+        G = nx.Graph()
+        G.add_nodes_from([(idx, node.dropna()) for idx, node in nodes.iterrows()])
+        G.add_edges_from(
+            [(start, end) for start, end in links[[LiT.start, LiT.end]].values.tolist()]
+        )
+        return G
 
 
 from . import layout_util

@@ -5,9 +5,6 @@ from multiprocessing import Manager, Pool, Process
 
 import numpy as np
 import pandas as pd
-import swifter
-
-import uploader as main_uploader
 
 from .settings import _WORKING_DIR
 
@@ -61,14 +58,14 @@ class Uploader:
         if self.project.pfile is None:
             self.project.pfile = DEFAULT_PFILE
         self.project.pfile["name"] = p_name
-        if self.stringify:
-            self.project.pfile["network"] = "string"
+        # TODO: Consider removing
+        # if self.stringify:
+        #     self.project.pfile["network"] = "string"
         self.project.pfile["network_type"] = "ppi"
         self.project.pfile["nodecount"] = 0
         self.project.pfile["linkcount"] = 0
         self.project.pfile["labelcount"] = 0
         self.MAX_NUM_LINKS = 262144
-        # TODO: PFILE IS WRONGLY WRITTEN LINKS AND LINKSRGB IS SWITCHED
 
     def makeProjectFolders(self) -> None:
         """Creates the project folders and writes empty pfile and names file."""
@@ -485,8 +482,9 @@ class Uploader:
         self.project.pfile["nodecount"] = len(nodes)
         self.project.pfile["linkcount"] = len(links)
         self.project.write_all_jsons()
-        if self.stringify:
-            self.stringify_project()
+        # #TODO:Consider Removing
+        # if self.stringify:
+        #     self.stringify_project()
         try:
             GD.loadGD()
         except Exception as e:

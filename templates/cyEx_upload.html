@@ -1,0 +1,131 @@
+<!-- PUT YOUR UI ELEMENTS IN HERE AND DEFINE MAPPINGS IN MyUi.js -->
+
+<!-- HTML STARTS HERE -->
+
+<!DOCTYPE html>
+<html>
+
+<style>
+  input[type='file'] {
+    outline: none;
+  }
+</style>
+
+<head>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-ui.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/SwagStyle.css') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+  <script type="text/javascript" src="{{ url_for('static', filename='js/mc_UI_Elements.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/utilities.js') }}"></script>
+
+  <script type="text/javascript" src="{{ url_for('CyEx.static', filename='js/cyExUpload.js') }}"></script>
+
+</head>
+<script>
+  layout_selections = 1;
+</script>
+<script>
+  var layAlgos = {{ layAlgos| tojson | safe }};
+</script>
+
+{% include 'templates.html' %}
+{% include 'cyEx_templates.html' %}
+
+<body>
+  <div style="margin-left: 30px; margin-top: 30px;">
+    <div id="fragment-1">
+      <form id="cyEx_upload_form" method=post enctype=multipart/form-data>
+        <div class="twelve columns">
+          <div class="eight columns">
+            <h2 class="lineglowslow" style="margin-top:30px">DataDiVR</h2>
+          </div>
+        </div>
+
+        <div class="twelve columns">
+          <h3><span>UPLOAD NEW DATA</span> <span style="color:rgb(60,60,60)"> / VRNETZ UPLOAD</span></h3>
+          <!-- <p style="color:grey">For filestructure refer to the Example File Download Links below.</p> -->
+        </div>
+        <div class="container" style=" display:flex;">
+          <div class="seven columns">
+
+            <div class="gradientBox" style="background:none">
+              <div class="swagBox" style="background-color: rgba(0, 10, 20, 0.3);height:170px">
+                <h5>CREATE NEW PROJECT</h5>
+                <br>
+                <input type="text" name="CyEx_project_name" id="CyEx_new_project_vrnetz" class="swagBox">
+                <p id="submit_warnings" style="display:inline"></p>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="five columns">
+            <div class="gradientBox" style="background:none">
+              <div class="swagBox" style="background-color: rgba(0, 10, 20, 0.3);">
+                <input type=submit value=Upload id=cyEx_upload_button class="swagSubmit"></button>
+                <br>
+                <div id="cyEx_upload_message" style="font-size:14px;"></div>
+                <br>
+                <div style="font-size:14px">Check out the new webGL preview!</div>
+                <input onclick="followLink('/preview',true)" type="button" value="webGL preview"
+                  style="height: 50px; text-align: justify" />
+                <!-- style="height: 50px; width: 250px;min-width: fit-content;" -->
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="twelve columns">
+          <div class="gradientBox" style="background:none">
+            <div class="swagBox" style="background-color: rgba(0, 10, 20, 0.3);">
+              <div>
+                <h5>VRNETZ FILE</h5>
+                <a href="{{ url_for('CyEx.static', filename='vrnetz/alzheimer_100.VRNetz') }}" download>Download
+                  Example
+                  File here</a>
+                <input type=file name=cyEx_vrnetz multiple><br><br>
+              </div>
+              <div>
+                <div>
+                  <h5>LAYOUTS</h5>
+                  <div class="gradientBox">
+                    <div class='swagBox' style="background-color: rgba(0, 10, 20, 0.3);" id="cyEx_layout_selection_box">
+                      <cy-ex-layout-selector id="cyEx_lay_sel_1" class="LD" name="1. Layout"></cy-ex-layout-selector>
+                    </div>
+                  </div>
+                  <input type="button" value="+" id="cyEx_additional_layouts"
+                    style="width: 10%;font-size: 30px;text-align: center;" onclick=add_layout_selection()></button>
+                  <script>
+                    function add_layout_selection() {
+                      let box = document.getElementById("cyEx_layout_selection_box")
+                      layout_selections += 1
+                      let newDD = document.createElement("cy-ex-layout-selector")
+                      newDD.setAttribute("id", id = "cyEx_lay_sel_" + layout_selections)
+                      newDD.setAttribute("name", layout_selections + ". Layout")
+                      console.log(newDD)
+                      box.appendChild(newDD)
+                    }
+                    function updateAllLayoutSelectors() {
+                      let selectors = document.getElementById("cyEx_layout_selection_box").children
+                      console.log(selectors)
+                      for (var i = 0; i < selectors.length; i++) {
+                        selectors[i].setAttribute("name", i + 1 + ". Layout")
+                        selectors[i].updateName()
+                      }
+                    }
+                  </script>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+
+</body>
