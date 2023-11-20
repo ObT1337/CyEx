@@ -12,7 +12,7 @@ sys.path.append(os.path.join(_WORKING_DIR, "..", ".."))
 
 import GlobalData as GD
 from PIL import Image
-from project import COLOR, DEFAULT_PFILE, NODE, Project
+from project import COLOR, DEFAULT_PFILE, NODE
 
 from .classes import Evidences as EV
 from .classes import LayoutTags as LT
@@ -21,6 +21,7 @@ from .classes import NodeTags as NT
 from .classes import ProjectTag as PT
 from .classes import StringTags as ST
 from .classes import VRNetzElements as VRNE
+from .cyEx_project import CyExProject
 from .settings import log
 from .util import clean_filename
 
@@ -41,23 +42,13 @@ class Uploader:
 
     def __init__(
         self,
-        network: dict,
-        p_name: str,
-        overwrite_project: bool = False,
-        stringify: bool = True,
+        project: CyExProject,
     ) -> None:
-        self.network = network
-        self.project = Project(p_name)
-        self.overwrite_project = overwrite_project  # boolean that indicates whether to skip existing project files or to update them
-        self.stringify = (
-            stringify  # boolean that indicates whether a network should be stringified
-        )
-        if self.overwrite_project:
+        self.project = project
+        if self.project.overwrite:
             self.project.remove()
-            self.project = Project(p_name)
         if self.project.pfile is None:
             self.project.pfile = DEFAULT_PFILE
-        self.project.pfile["name"] = p_name
         # TODO: Consider removing
         # if self.stringify:
         #     self.project.pfile["network"] = "string"
@@ -65,6 +56,7 @@ class Uploader:
         self.project.pfile["nodecount"] = 0
         self.project.pfile["linkcount"] = 0
         self.project.pfile["labelcount"] = 0
+        self.project.pfile["name"] = self.project.name
         self.MAX_NUM_LINKS = 262144
 
     def makeProjectFolders(self) -> None:
@@ -185,6 +177,7 @@ class Uploader:
         )
         path = self.project.location
         layouts = [c for c in links.columns if c.endswith("col")]
+        log.debug(layouts)
         args = []
         for lay in layouts:
             layout = tmp[lay].copy()
@@ -376,7 +369,6 @@ class Uploader:
 
     def upload_files(
         self,
-        network: dict,
         parallel: bool = True,
     ) -> str:
         """Generates textures and upload the needed network files. If created_2d_layout is True, it will create 2d layouts of the network one based on the cytoscape coordinates and one based on the new coordinated that come from the 3D layout without the z-coordinate.
@@ -394,7 +386,7 @@ class Uploader:
         # Set up project directories
         prolist = GD.listProjects()
 
-        if self.overwrite_project:
+        if self.project.overwrite:
             self.makeProjectFolders()
         else:
             if project in prolist:
@@ -403,10 +395,10 @@ class Uploader:
                 # Make Folders
                 self.makeProjectFolders()
 
-        nodes = network.get(VRNE.nodes)
-        links = network.get(VRNE.links)
-        n_lay = network.get(VRNE.node_layouts, [])  # Node layouts
-        l_lay = network.get(VRNE.link_layouts, [])  # Link layouts
+        nodes = self.project.network.get(VRNE.nodes)
+        links = self.project.network.get(VRNE.links)
+        n_lay = self.project.network.get(VRNE.node_layouts, [])  # Node layouts
+        l_lay = self.project.network.get(VRNE.link_layouts, [])  # Link layouts
         if self.project.names is None:
             self.project.names = {}
 
@@ -438,7 +430,7 @@ class Uploader:
                 self.project.pfile["links"].append(res["xyz"])
             if res["rgb"] and res["rgb"] not in self.project.pfile["linksRGB"]:
                 self.project.pfile["linksRGB"].append(res["rgb"])
-        nodes = self.network.get(VRNE.nodes, [])
+        nodes = self.project.network.get(VRNE.nodes, [])
 
         if isinstance(nodes, pd.DataFrame):
             drops = (
@@ -449,7 +441,7 @@ class Uploader:
             for c in drops:
                 if c in nodes.columns:
                     nodes = nodes.drop(columns=[c])
-        links = self.network.get(VRNE.links, [])
+        links = self.project.network.get(VRNE.links, [])
 
         if isinstance(links, pd.DataFrame):
             drops = [c for c in links.columns if c.endswith("_col")] + ["size"]
@@ -526,7 +518,7 @@ class Uploader:
         #     p.start()
 
         self.project.nodes = {"nodes": []}  # Reset nodes
-        nodes = pd.DataFrame(self.network.get(VRNE.nodes))
+        nodes = pd.DataFrame(self.project.network.get(VRNE.nodes))
         nodes = self.change_to_universal_attr(nodes)
 
         filtered = nodes.copy()
@@ -555,7 +547,7 @@ class Uploader:
         }
 
         self.project.links = {"links": []}
-        links = self.network.get(VRNE.links)
+        links = self.project.network.get(VRNE.links)
 
         self.project.links = {
             "links": [

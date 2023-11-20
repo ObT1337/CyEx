@@ -43,3 +43,5 @@ log = logger.get_logger(
     format=_LOG_FORMAT,
     c_format=_LOG_FORMAT,
 )
+
+SPHERE = os.path.join(_THIS_EXT_STATIC_PATH, "ply", "sphere.ply")

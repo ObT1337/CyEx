@@ -6,7 +6,6 @@ except ImportError:  # pip < 10.0
 import sys
 from enum import Enum
 
-
 # Tags
 class LayoutTags:
     """

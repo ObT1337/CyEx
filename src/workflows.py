@@ -7,7 +7,6 @@ import pandas as pd
 
 from . import util as string_util
 from .classes import VRNetzElements as VRNE
-from .layout_generator import LayoutGenerator
 from .settings import _NETWORKS_PATH, log
 from .uploader import Uploader
 
@@ -35,24 +34,6 @@ def VRNetzer_upload_workflow(
     Returns:
         str: HTML string to reflect whether the upload was successful or not.
     """
-    if tags is None:
-        tags = {
-            "stringify": False,
-            "string_write": False,
-            "string_calc_lay": True,
-        }
-
-    if algo_variables is None:
-        algo_variables = [{}]
-    log.info("Starting upload of VRNetz...")
-    start = time.time()
-
-    log.debug(f"Network loaded in {time.time()-start} seconds.")
-    log.info(f"Network loaded from {filename}.", flush=True)
-
-    if not project_name:
-        return "namespace fail"
-
     # TODO: if Overwrite Project, delete the project before this
     state = ""
     log.info(
@@ -60,17 +41,8 @@ def VRNetzer_upload_workflow(
         + f"which results in the following layouts: {layout_names}."
     )
     s1 = time.time()
-    log.debug(f"Generating Layout is set to {tags.get('string_calc_lay')}")
-    generator = calculate_layouts_workflow(
-        network,
-        layout_algorithms=layout_algos,
-        stringify=tags.get("stringify"),
-        gen_layout=tags.get("string_calc_lay"),
-        algo_variables=algo_variables,
-        layout_names=layout_names,
-    )
+
     log.debug(f"Applied layout algorithm in {time.time()-s1} seconds.")
-    network = generator.network
     log.debug(list(network["nodes"].columns))
     # upload network
     uploader = Uploader(
@@ -153,63 +125,3 @@ def VRNetzer_send_network_workflow(request: dict, blueprint: flask.Blueprint):
         string_util.set_project(blueprint, project_name)
         # {'usr': '2nmmy7P0IG', 'msg': 'string_arabidopsis_ppi', 'id': 'projDD', 'val': '2', 'fn': 'dropdown'}
     return output[1:]
-
-
-def calculate_layouts_workflow(
-    network: str or dict,
-    gen_layout: bool = True,
-    layout_algorithms: str = None,
-    stringify: bool = True,
-    algo_variables: dict = {},
-    layout_names: str = None,
-) -> LayoutGenerator:
-    """
-    Applies a layout algorithm to a network and returns a LayoutGenerator object.
-
-    Args:
-        network (str): Path to the network file or a dictionary containing the network.
-        gen_layout (bool, optional): If True, the layout algorithm is applied. Defaults to True.
-        layout_algo (str, optional): Name of the layout algorithm. Defaults to None.
-        stringify (bool, optional): Indicates whether the network is a STRING network. Defaults to True.
-        algo_variables (dict, optional): Dictionary containing the parameters of the layout algorithm. Defaults to {}.
-        layout_name (str, optional): Name of the layout. Defaults to None.
-    """
-    generator = LayoutGenerator()
-    if type(network) is dict:
-        network[VRNE.nodes] = pd.DataFrame(network[VRNE.nodes])
-        network[VRNE.links] = pd.DataFrame(network[VRNE.links])
-        generator.network = network
-        generator.graph = generator.gen_graph(network[VRNE.nodes], network[VRNE.links])
-    else:
-        generator.read_from_vrnetz(network)
-        log.info(f"Network extracted from: {network}")
-
-    ## Handle Nodes
-    log.debug(f"Generating Layout is set to {gen_layout}")
-    if gen_layout:
-        if layout_algorithms is None:
-            layout_algorithms = ["spring"]
-        layouts = generator.apply_layout(layout_algorithms, algo_variables)
-        layouts = {
-            name: layouts[old_key]
-            for old_key, name in zip(layouts.keys(), layout_names)
-        }
-        nodes = generator.add_layouts_to_vrnetz(generator.network[VRNE.nodes], layouts)
-        generator.network[VRNE.nodes] = nodes
-        log.info(f"Following algorithms have been applied: {layout_algorithms}!")
-
-    ## Handle Links
-    # TODO: CONSIDER FOR STRING NETWORKS
-    # links = generator.gen_evidence_layouts(
-    #     generator.network[VRNE.links], stringify=stringify
-    # )
-    num_links = len(generator.network[VRNE.links])
-    generator.network[VRNE.links]["all_col"] = [(200, 200, 200, 255)] * num_links
-    links = generator.network[VRNE.links]
-    drops = ["s_suid", "e_suid"]
-    for c in drops:
-        if c in links.columns:
-            links = links.drop(columns=[c])
-    generator.network[VRNE.links] = links
-
-    return generator
