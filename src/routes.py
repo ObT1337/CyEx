@@ -6,14 +6,13 @@ import flask
 
 from . import settings as st
 from . import util as my_util
-from . import workflows as wf
 from .classes import VRNetzElements as VRNE
 from .cyEx_project import CyExProject
 from .settings import log
 from .uploader import Uploader
 
 
-def upload_vrnetz():
+def upload_vrnetz(network=None):
     """Use the submitted file to create a VRNetzer project.
     Submitted file is a VRNetz file. The file is parsed and the project is created. Reports if VRNetz file is missing or if its wrongly formatted.
     """
@@ -21,25 +20,22 @@ def upload_vrnetz():
     ### Initialization
     form = flask.request.form.to_dict()
     vr_netz_files = flask.request.files.getlist("cyEx_vrnetz")
-    if len(vr_netz_files) == 0 or vr_netz_files[0].filename == "":
-        st.log.error("No VRNetz file provided!")
-        return '<a style="color:red;"href="/upload">ERROR invalid VRNetz file!</a>'
-    network_file = vr_netz_files[0]
-    network = network_file.read().decode("utf-8")
-    try:
-        network = json.loads(network)
-    except json.decoder.JSONDecodeError:
-        st.log.error(f"Invalid VRNetz file:{network_file.filename}")
-        return '<a style="color:red;">ERROR invalid VRNetz file!</a>'
-
+    if not network:
+        if len(vr_netz_files) == 0 or vr_netz_files[0].filename == "":
+            st.log.error("No VRNetz file provided!")
+            return '<a style="color:red;"href="/upload">ERROR invalid VRNetz file!</a>'
+        network_file = vr_netz_files[0]
+        network = network_file.read().decode("utf-8")
+        try:
+            network = json.loads(network)
+        except json.decoder.JSONDecodeError:
+            st.log.error(f"Invalid VRNetz file:{network_file.filename}")
+            return '<a style="color:red;">ERROR invalid VRNetz file!</a>'
     project_name = form["CyEx_project_name"]
     project = CyExProject(project_name, network)
 
-    ## Prepare layout informations
+    ## Prepare layout information
     i = 1
-    algos = []
-    layout_names = []
-    algo_variables = []
     st.log.debug(form)
     while True:
         name = f"layout_{i}_name"

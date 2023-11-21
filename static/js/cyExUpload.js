@@ -1,7 +1,9 @@
 $(document).ready(function () {
   //LOAD NAMESPACE MENU TAB 1
   //LOAD NAMESPACE MENU TAB 1
-
+  if (job) {
+    document.getElementById("cy_ex_vrnetzfile_div").style.display = "none";
+  }
   $("#cyEx_upload_button").button();
 
   $("#cyEx_upload_form").on("change input", function () {
@@ -24,7 +26,7 @@ $(document).ready(function () {
       console.log(formData.get(result.value));
       result = it.next();
     }
-
+    if (job) formData.append("job", job);
     formData["layouts"] = [];
     var layoutSelectors = this.querySelectorAll("cy-ex-layout-selector");
 
@@ -36,6 +38,7 @@ $(document).ready(function () {
         formData.append("layout_" + (index + 1) + "_" + key, layoutData[key]);
       });
     });
+    console.log(formData);
     var url = "http://" + location.host + "/CyEx/vrnetz_upload";
     console.log(url);
     console.log(formData);

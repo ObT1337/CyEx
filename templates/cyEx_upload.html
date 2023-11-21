@@ -30,7 +30,15 @@
 </script>
 <script>
   var layAlgos = {{ layAlgos| tojson | safe }};
+
+  var job = false;
 </script>
+
+{% if job %}
+<script>
+  job = "{{ job }}";
+</script>
+{% endif %}
 
 {% include 'templates.html' %}
 {% include 'cyEx_templates.html' %}
@@ -81,7 +89,7 @@
         <div class="twelve columns">
           <div class="gradientBox" style="background:none">
             <div class="swagBox" style="background-color: rgba(0, 10, 20, 0.3);">
-              <div>
+              <div id="cy_ex_vrnetzfile_div">
                 <h5>VRNETZ FILE</h5>
                 <a href="{{ url_for('CyEx.static', filename='vrnetz/alzheimer_100.VRNetz') }}" download>Download
                   Example

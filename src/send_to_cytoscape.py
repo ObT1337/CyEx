@@ -1,4 +1,4 @@
-__updated__ = "2023-11-13 15:46:19"
+__updated__ = "2023-11-21 16:45:12"
 import json
 import os
 import random
@@ -40,7 +40,8 @@ def send_to_cytoscape(
     }
 
     selected_nodes = [node["id"] for node in pdata["cbnode"]]
-    project = pfile["name"]
+    project = Project(pfile["name"])
+    project.pfile = pfile
     selected_links = None  # TODO: Link selection from the utility extension
 
     if not selected_nodes or not isinstance(selected_nodes, list):
@@ -85,7 +86,9 @@ def send_to_cytoscape(
         nodes = extract_node_data(selected_nodes, project, layout, color)
         links, _ = extract_link_data(selected_nodes, selected_links, project)
 
-    st.log.debug("Extracted node and link data", flush=True)
+    st.log.debug("Extracted node and link data:")
+    st.log.debug(nodes)
+    st.log.debug(links)
     # Create network
     args = (nodes,)
     if links.size > 0:
@@ -162,7 +165,7 @@ def send_to_cytoscape(
 
 
 def extract_node_data(
-    selected_nodes: list[int], project: str, layout: str, color: str
+    selected_nodes: list[int], project: Project, layout: str, color: str
 ) -> tuple[pd.DataFrame, list[int]]:
     """Extract node data of selected nodes from selected layout and color as well as other node attributes from the nodes file and the name from the names.json file.
 
@@ -175,7 +178,6 @@ def extract_node_data(
     Returns:
         tuple(pd.DataFrame,list[int]): Nodes data and selected nodes as nodes list gets reduced to a total of maximal 2000 nodes.
     """
-    project = Project(project)
     project.read_nodes()
     project.read_names()
     nodes_data = pd.DataFrame(project.nodes["nodes"])
@@ -265,7 +267,7 @@ def extract_node_data(
 
 
 def extract_link_data(
-    nodes: list[int], selected_links: list[int], project: str
+    nodes: list[int], selected_links: list[int], project: Project
 ) -> pd.DataFrame:
     """Extracts links from projects links.json file.
 
@@ -276,15 +278,19 @@ def extract_link_data(
     Returns:
         pd.DataFrame: Extracted link data.
     """
-    project_path = os.path.join(st._PROJECTS_PATH, project)
-    with open(os.path.join(project_path, "links.json"), "r") as f:
+    with open(os.path.join(project.location, "links.json"), "r") as f:
         links_data = json.load(f)["links"]
+
+    str_nodes = [
+        str(node) for node in nodes
+    ]  # Not sure start and end in links are store as string or not. Compensate for that
     links_data = pd.DataFrame(links_data)
     if selected_links:
         links_data = links_data[links_data.index.isin(selected_links)]
     if nodes:
         links_data = links_data[
             links_data["s"].isin(nodes) & links_data["e"].isin(nodes)
+            | links_data["s"].isin(str_nodes) & links_data["e"].isin(str_nodes)
         ]
     else:
         all_links = pd.concat(links_data["s"], links_data["e"])
