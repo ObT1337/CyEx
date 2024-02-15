@@ -8,25 +8,9 @@ Furthermore, in combination with the [VRNetzerApp](https://github.com/menchelab/
 
 ## Installation
 
-1. Add the `StringEx` directory to your VRNetzer backend directory. The directory should be located at `"extensions/StringEx"`.
-2. Before the line:
-   ```
-   python -m pip install -r requirements.txt
-   ```
-   add the following line to the VRNetzer backend's `build and run` script (Windows: `buildandRUN.ps`, Linux: `linux_buildandrun.sh`, Mac: `mac_buildandrun.sh`) :
-   ```
-   python -m pip install -r extensions/StringEx/requirements.txt
-   ```
-   If you would like to use cartoGRAPHs to create layouts also add the following line:
-   ```
-   python -m pip install -r extensions/StringEx/requirements_cartoGRAPHs.txt
-   ```
-   It should now look something like this:
-   ```
-   python -m pip install -r extensions/StringEx/requirements.txt
-   python -m pip install -r extensions/StringEx/requirements_cartoGRAPHs.txt
-   python -m pip install -r requirements.txt
-   ```
+1. Add the `StringEx` directory to your DataDiVR backend directory. The directory should be located at `"extensions/StringEx"`.
+2. Restart your backend server.
+3. During the start-up of the backend server, all the necessary python packages needed for the extension should be automatically installed.
 
 ## Usage
 
@@ -53,13 +37,13 @@ Do the first three steps as mentioned [above](#upload-string-network).
 
 4. The second tab is the STRING mapper.
 
-   <img src="./static/img/Map.png" alt="Picture that visualizes the location of the StringEx map tab.">
+   <img src="./static/img/Map.png" alt= "Picture that visualizes the location of the StringEx map tab.">
 
-5. On this tab, (a) define a project name, (b) select the VRNetz file of your exported String network, and (c) select the organism from which your VRNetz originates of.
+5. On this tab, (a) define a project name, (b) select the VRNetz file of your exported String network, and (c) select the organism from which your VRNetz originates.
 6. Click on the "Map" button to map the network with the preprocessed PPI.
 7. If the upload was successful, you'll be prompted with a success message and a link to preview the project in the designated WebGL previewer.
 
-# Reconstruct STRING interactomes
+# Reconstruct STRING interactomes (WIP)
 
 To reconstruct the provided STRING interactomes from the source files the `construct_interactomes.py' script can be used:
 
