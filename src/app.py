@@ -3,11 +3,11 @@ import multiprocessing as mp
 import uuid
 
 import flask
+
 import GlobalData as GD
+import util
 from io_blueprint import IOBlueprint
 from project import Project
-
-import util
 
 from . import routes
 from . import settings as st
@@ -36,8 +36,8 @@ my_util.move_on_boot()
 
 @blueprint.before_app_first_request
 def cy_ex_setup():
-    pass
     # Execute before first request
+    pass
 
 
 @blueprint.route("/")

@@ -1,16 +1,15 @@
 # TEMP README COPIED FROM STRINGEX
 
-# StringEx
+# CyEx
 
-This extension enables the upload and analysis of STRING networks within the VRNetzer platform. In combination with the [StringApp](https://apps.cytoscape.org/apps/stringapp) and [VRNetzerApp](https://github.com/menchelab/STRING-VRNetzer/blob/main/VRNetzerApp/target/VRNetzerApp-1.0.0.jar) created for the widely used software [Cytoscape](https://cytoscape.org/), this extension allows for easy access to STRING networks on the VRNetzer platform.
-
-Furthermore, in combination with the [VRNetzerApp](https://github.com/menchelab/STRING-VRNetzer/blob/main/cytoscapeApp/VRNetzerApp/target/VRNetzerApp-1.0.0.jar) it allows to upload or send any network prepared in Cytoscape to the VRNetzer platform. Through the utilization of the [CyREST](https://apps.cytoscape.org/apps/cyrest) API, a sub-set of a large-scale VRNetzer project can be send to a running Cytoscape session.
+This extension serves as a bridge between the DataDiVR ecosystem and the widely used network visualization software Cytoscape. In combination with the Cytoscape App [DataDiVRApp](https://github.com/menchelab/DataDiVRApp) this extension allows to upload and receive networks exported from Cytoscape using the DataDiVRApp.
+Furthermore, it also enables to sent sub-set of a large-scale DataDiVR Project from a running session to a running Cytoscape session.
 
 ## Installation
 
 1. Add the `StringEx` directory to your DataDiVR backend directory. The directory should be located at `"extensions/StringEx"`.
 2. Restart your backend server.
-3. During the start-up of the backend server, all the necessary python packages needed for the extension should be automatically installed.
+3. During the start-up of the backend server, all the necessary Python packages needed for the extension should be automatically installed.
 
 ## Usage
 
