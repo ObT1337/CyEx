@@ -1,4 +1,4 @@
-__updated__ = "2023-11-21 16:45:12"
+__updated__ = "2024-02-28 15:56:01"
 import json
 import os
 import random
@@ -52,9 +52,15 @@ def send_to_cytoscape(
 
     assert selected_nodes != None, "Selected Nodes is None"
     assert selected_links != None, "Selected Links is None"
+
     if len(selected_nodes) == 0 and len(selected_links) == 0:
-        st.log.debug(return_dict)
-        return
+        # TODO: Somehow this does not result in the same number as the imported network.
+        st.log.debug("No nodes selected will take all or up to 400 nodes.")
+        project.read_nodes()
+        last_node = len(project.nodes["nodes"])
+        if len(project.nodes["nodes"]) > 400:
+            last_node = 400
+        selected_nodes = [node["id"] for node in project.nodes["nodes"][:last_node]]
 
     port = 1234
     layout_id, color_id = pdata.get("layoutsDD"), pdata.get("layoutsRGBDD")
