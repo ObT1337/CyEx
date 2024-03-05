@@ -3,7 +3,6 @@ import os
 import networkx as nx
 import numpy
 import numpy as np
-import open3d as o3d
 
 _WORKING_DIR = os.path.dirname(os.path.abspath(__file__))
 _THIS_EXT = os.path.join(_WORKING_DIR, "..")
@@ -14,36 +13,37 @@ _THIS_EXT_STATIC_PATH = os.path.join(
 SPHERE = os.path.join(_THIS_EXT_STATIC_PATH, "resources", "sphere.ply")
 
 
-def sample_sphere_pcd(
-    SAMPLE_POINTS=100,
-    layout: list[list[float, float, float]] = [],
-    debug=False,
-) -> numpy.array:
-    """Utility function to sample points from a sphere. Can be used for functional layouts for node with no annotations.
+# Deprecated open3d packages is not perfectly developed for m1 macs
+# def sample_sphere_pcd(
+#     SAMPLE_POINTS=100,
+#     layout: list[list[float, float, float]] = [],
+#     debug=False,
+# ) -> numpy.array:
+#     """Utility function to sample points from a sphere. Can be used for functional layouts for node with no annotations.
 
-    Args:
-        SAMPLE_POINTS (int, optional): Number of points to sample. Defaults to 100.
-        layout (list, optional): List of points if the calculated Layout. Is used to center the sphere around this layout. Defaults to [].
-        debug (bool, optional): Switch to show visualization of the process. Defaults to False.
+#     Args:
+#         SAMPLE_POINTS (int, optional): Number of points to sample. Defaults to 100.
+#         layout (list, optional): List of points if the calculated Layout. Is used to center the sphere around this layout. Defaults to [].
+#         debug (bool, optional): Switch to show visualization of the process. Defaults to False.
 
-    Returns:
-        numpy.array: Array of sampled points with shape (SAMPLE_POINTS, 3)
-    """
-    if SAMPLE_POINTS == 0:
-        return numpy.array([])
-    # get protein name & read mesh as .ply format
-    mesh = o3d.io.read_triangle_mesh(SPHERE)
-    mesh.compute_vertex_normals()
-    layout_pcd = o3d.geometry.PointCloud()
-    layout_pcd.points = o3d.utility.Vector3dVector(numpy.asarray(layout))
-    layout_pcd.paint_uniform_color([1, 0, 0])
-    layout_center = layout_pcd.get_center()
-    mesh.translate(layout_center, relative=False)
-    pcd = mesh.sample_points_uniformly(number_of_points=SAMPLE_POINTS)
-    pcd.paint_uniform_color([0, 1, 0])
-    if debug:
-        o3d.visualization.draw_geometries([pcd, layout_pcd])
-    return numpy.asarray(pcd.points)
+#     Returns:
+#         numpy.array: Array of sampled points with shape (SAMPLE_POINTS, 3)
+#     """
+#     if SAMPLE_POINTS == 0:
+#         return numpy.array([])
+#     # get protein name & read mesh as .ply format
+#     mesh = o3d.io.read_triangle_mesh(SPHERE)
+#     mesh.compute_vertex_normals()
+#     layout_pcd = o3d.geometry.PointCloud()
+#     layout_pcd.points = o3d.utility.Vector3dVector(numpy.asarray(layout))
+#     layout_pcd.paint_uniform_color([1, 0, 0])
+#     layout_center = layout_pcd.get_center()
+#     mesh.translate(layout_center, relative=False)
+#     pcd = mesh.sample_points_uniformly(number_of_points=SAMPLE_POINTS)
+#     pcd.paint_uniform_color([0, 1, 0])
+#     if debug:
+#         o3d.visualization.draw_geometries([pcd, layout_pcd])
+#     return numpy.asarray(pcd.points)
 
 
 def visualize_layout(

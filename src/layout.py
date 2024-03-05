@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy
 import numpy as np
-import open3d as o3d
 import pandas as pd
 import swifter
+import trimesh
 
 from . import settings as st
 from . import util
@@ -51,6 +51,7 @@ class Layout:
         self._umap_variables: dict = None
         self.random_layout: bool = False
         self.pos: dict[str : list[float]] = {}
+        self.feature_matrix: pd.DataFrame = None
 
     def __len__(self):
         return self.size
@@ -182,8 +183,11 @@ class Layout:
         # TODO: CHECK WHETHER layout.pos should be set in every function or should be return by the functions an set from the responsible caller. First is prefered
         self.link_based_layout(nx.kamada_kawai_layout)
 
-    def create_random_layout(self) -> dict:
-        self.pos = nx.random_layout(self.graph, dim=3)
+    def create_random_layout(self, graph=None) -> dict:
+        if not graph:
+            graph = self.graph
+        self.pos = nx.random_layout(graph, dim=3)
+        return self.pos
 
     def create_cartoGRAPH_layout(
         self,
@@ -233,7 +237,7 @@ class Layout:
                         feature_graph,
                         self.feature_matrix,
                         dim,
-                        **self.get_tsne_variables(),
+                        **algo_variables,
                     )
                 layout = sample_sphere(sphere_graph, list(functional.values()))
                 functional.update(layout)
@@ -259,7 +263,7 @@ class Layout:
                         feature_graph,
                         self.feature_matrix,
                         dim,
-                        **self.get_umap_variables(),
+                        **algo_variables,
                     )
                 layout = sample_sphere(sphere_graph, list(functional.values()))
                 functional.update(layout)
@@ -352,11 +356,9 @@ def normalize_pos(
 
 
 def sample_sphere_pcd(
-    SAMPLE_POINTS=100,
-    layout: list[list[float, float, float]] = None,
-    debug=False,
-) -> numpy.array:
-    """Utility function to sample points from a sphere. Can be used for functional layouts for node with no annotations.
+    SAMPLE_POINTS=100, layout: list[list[float, float, float]] = None, debug=False
+) -> np.array:
+    """Utility function to sample points from a sphere using trimesh.
 
     Args:
         SAMPLE_POINTS (int, optional): Number of points to sample. Defaults to 100.
@@ -370,58 +372,98 @@ def sample_sphere_pcd(
         layout = []
 
     if SAMPLE_POINTS == 0:
-        return numpy.array([])
-    # get protein name & read mesh as .ply format
-    mesh = o3d.io.read_triangle_mesh(st.SPHERE)
-    mesh.compute_vertex_normals()
-    layout_pcd = o3d.geometry.PointCloud()
-    layout_pcd.points = o3d.utility.Vector3dVector(numpy.asarray(layout))
-    layout_pcd.paint_uniform_color([1, 0, 0])
-    layout_center = layout_pcd.get_center()
-    mesh.translate(layout_center, relative=False)
-    pcd = mesh.sample_points_uniformly(number_of_points=SAMPLE_POINTS)
-    pcd.paint_uniform_color([0, 1, 0])
+        return np.array([])
+
+    # Create a sphere mesh centered at the layout point
+    sphere = trimesh.creation.icosphere(radius=1, subdivisions=3)
+    if layout:
+        layout_center = np.mean(layout, axis=0)
+        sphere.apply_translation(-layout_center)
+
+    # Sample points uniformly on the sphere
+    points, _ = trimesh.sample.sample_surface_even(sphere, SAMPLE_POINTS)
+
     if debug:
-        o3d.visualization.draw_geometries([pcd, layout_pcd])
-    return numpy.asarray(pcd.points)
+        scene = trimesh.Scene([sphere])
+        scene.add_points(points)
+        scene.show()
+
+    return points
 
 
-def visualize_layout(
-    layout: list[list[float, float, float]],
-    colors: list[list[float, float, float]],
-) -> None:
-    """Visualize a layout with colors in 3D using open3D.
+# # Open3D version
+# def sample_sphere_pcd(
+#     SAMPLE_POINTS=100,
+#     layout: list[list[float, float, float]] = None,
+#     debug=False,
+# ) -> numpy.array:
+#     """Utility function to sample points from a sphere. Can be used for functional layouts for node with no annotations.
 
-    Args:
-        layout (list[list[float, float, float]]): List of points with shape (n, 3)
-        colors (list[list[float, float, float]]): List of colors of the points with shape (n, 3)
+#     Args:
+#         SAMPLE_POINTS (int, optional): Number of points to sample. Defaults to 100.
+#         layout (list, optional): List of points if the calculated Layout. Is used to center the sphere around this layout. Defaults to [].
+#         debug (bool, optional): Switch to show visualization of the process. Defaults to False.
 
-    Returns:
-        None: None
-    """
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(numpy.asarray(layout))
-    pcd.colors = o3d.utility.Vector3dVector(numpy.asarray(colors))
+#     Returns:
+#         numpy.array: Array of sampled points with shape (SAMPLE_POINTS, 3)
+#     """
+#     if layout is None:
+#         layout = []
 
-    def change_background_to_black(vis):
-        opt = vis.get_render_option()
-        opt.background_color = np.asarray([0, 0, 0])
-        return False
+#     if SAMPLE_POINTS == 0:
+#         return numpy.array([])
+#     # get protein name & read mesh as .ply format
+#     mesh = o3d.io.read_triangle_mesh(st.SPHERE)
+#     mesh.compute_vertex_normals()
+#     layout_pcd = o3d.geometry.PointCloud()
+#     layout_pcd.points = o3d.utility.Vector3dVector(numpy.asarray(layout))
+#     layout_pcd.paint_uniform_color([1, 0, 0])
+#     layout_center = layout_pcd.get_center()
+#     mesh.translate(layout_center, relative=False)
+#     pcd = mesh.sample_points_uniformly(number_of_points=SAMPLE_POINTS)
+#     pcd.paint_uniform_color([0, 1, 0])
+#     if debug:
+#         o3d.visualization.draw_geometries([pcd, layout_pcd])
+#     return numpy.asarray(pcd.points)
 
-    def change_background_to_white(vis):
-        opt = vis.get_render_option()
-        opt.background_color = np.asarray([1, 1, 1])
-        return False
 
-    key_to_callback = {}
-    key_to_callback[ord("K")] = change_background_to_black
-    key_to_callback[ord("L")] = change_background_to_white
-    key_to_callback[ord("P")] = exit
+# Deprecated until a replacement for open3d is found
+# def visualize_layout(
+#     layout: list[list[float, float, float]],
+#     colors: list[list[float, float, float]],
+# ) -> None:
+#     """Visualize a layout with colors in 3D using open3D.
 
-    try:
-        o3d.visualization.draw_geometries_with_key_callbacks([pcd], key_to_callback)
-    except KeyboardInterrupt:
-        pass
+#     Args:
+#         layout (list[list[float, float, float]]): List of points with shape (n, 3)
+#         colors (list[list[float, float, float]]): List of colors of the points with shape (n, 3)
+
+#     Returns:
+#         None: None
+#     """
+#     pcd = o3d.geometry.PointCloud()
+#     pcd.points = o3d.utility.Vector3dVector(numpy.asarray(layout))
+#     pcd.colors = o3d.utility.Vector3dVector(numpy.asarray(colors))
+
+#     def change_background_to_black(vis):
+#         opt = vis.get_render_option()
+#         opt.background_color = np.asarray([0, 0, 0])
+#         return False
+
+#     def change_background_to_white(vis):
+#         opt = vis.get_render_option()
+#         opt.background_color = np.asarray([1, 1, 1])
+#         return False
+
+#     key_to_callback = {}
+#     key_to_callback[ord("K")] = change_background_to_black
+#     key_to_callback[ord("L")] = change_background_to_white
+#     key_to_callback[ord("P")] = exit
+
+#     try:
+#         o3d.visualization.draw_geometries_with_key_callbacks([pcd], key_to_callback)
+#     except KeyboardInterrupt:
+#         pass
 
 
 def sample_sphere(
@@ -444,14 +486,15 @@ def sample_sphere(
     return layout
 
 
-def take_screenshot(
-    layout: list[float, float, float], color, *args, **kwargs
-) -> np.ndarray:
-    visualize_layout(layout, color, *args, **kwargs)
+# Deprecated until a replacement for open3d is found
+# def take_screenshot(
+#     layout: list[float, float, float], color, *args, **kwargs
+# ) -> np.ndarray:
+#     visualize_layout(layout, color, *args, **kwargs)
 
-
-if __name__ == "__main__":
-    some_graph = nx.complete_graph(500)
-    pos = nx.spring_layout(some_graph, dim=3)
-    pos = list(pos.values())
-    sample_sphere_pcd(layout=pos, debug=True)
+# Deprecated until a replacement for open3d is found
+# if __name__ == "__main__":
+#     some_graph = nx.complete_graph(500)
+#     pos = nx.spring_layout(some_graph, dim=3)
+#     pos = list(pos.values())
+#     sample_sphere_pcd(layout=pos, debug=True)

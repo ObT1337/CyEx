@@ -19,6 +19,7 @@ def upload_vrnetz(network=None):
 
     ### Initialization
     form = flask.request.form.to_dict()
+    print(form)
     vr_netz_files = flask.request.files.getlist("cyEx_vrnetz")
     if not network:
         if len(vr_netz_files) == 0 or vr_netz_files[0].filename == "":
@@ -31,8 +32,9 @@ def upload_vrnetz(network=None):
         except json.decoder.JSONDecodeError:
             st.log.error(f"Invalid VRNetz file:{network_file.filename}")
             return '<a style="color:red;">ERROR invalid VRNetz file!</a>'
-    project_name = form["CyEx_project_name"]
-    project = CyExProject(project_name, network)
+    project_name = form.get("CyEx_project_name")
+    overwrite_project = bool(form.get("overwrite") == "true")
+    project = CyExProject(project_name, network, overwrite=overwrite_project)
 
     ## Prepare layout information
     i = 1
@@ -75,9 +77,9 @@ def upload_vrnetz(network=None):
     s1 = time.time()
     state = uploader.upload_files()
     log.debug(f"Uploading process took {time.time()-s1} seconds.")
-    log.info(f"Uploading network...", flush=True)
+    log.info("Uploading network...", flush=True)
 
-    ## TODO: Not sure if necessary, was nice for debugging
+    # #TODO: Not sure if necessary, was nice for debugging
     # if tags.get("string_write"):
     #     outfile = f"{st._NETWORKS_PATH}/{project_name}_processed.VRNetz"
     #     os.makedirs(os.path.dirname(outfile), exist_ok=True)

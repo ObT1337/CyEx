@@ -18,11 +18,15 @@
 
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
 
   <script type="text/javascript" src="{{ url_for('static', filename='js/mc_UI_Elements.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('CyEx.static', filename='js/cyExUtil.js') }}"></script>
 
+  <script type="text/javascript" src="{{ url_for('CyEx.static', filename='js/cyExSendLogic.js') }}"></script>
+
   <script type="text/javascript" src="{{ url_for('CyEx.static', filename='js/cyExUpload.js') }}"></script>
+
 
 </head>
 <script>
@@ -61,11 +65,18 @@
           <div class="seven columns">
 
             <div class="gradientBox" style="background:none">
-              <div class="swagBox" style="background-color: rgba(0, 10, 20, 0.3);height:170px">
-                <h5>CREATE NEW PROJECT</h5>
+
+              <div class="swagBox" style="background-color: rgba(0, 10, 20, 0.3);height:225px;">
+                <h5 style="width:100%">CREATE NEW PROJECT</h5>
                 <br>
-                <input type="text" name="CyEx_project_name" id="CyEx_new_project_vrnetz" class="swagBox">
-                <p id="submit_warnings" style="display:inline"></p>
+                <div style="display:flex;align-items: center;             justify-content: center;">
+                  <input type="text" name="CyEx_project_name" id="CyEx_new_project_vrnetz" class="swagBox"
+                    style="width: 90%;">
+                  <label>
+                    <input id="CyEx_project_overwrite" type="checkbox" style="margin-left:-2px">
+                    Overwrite</label>
+                </div>
+                <p id="CyEx_project_submit_warnings" style="display:inline"></p>
               </div>
             </div>
           </div>
@@ -73,10 +84,10 @@
 
           <div class="five columns">
             <div class="gradientBox" style="background:none">
-              <div class="swagBox" style="background-color: rgba(0, 10, 20, 0.3);">
+              <div class="swagBox" style="background-color: rgba(0, 10, 20, 0.3);height:225px">
                 <input type=submit value=Upload id=cyEx_upload_button class="swagSubmit"></button>
                 <br>
-                <div id="cyEx_upload_message" style="font-size:14px;"></div>
+                <div id="cyEx_upload_message" style="font-size:14px;overflow:scroll;height:55px;"></div>
                 <br>
                 <div style="font-size:14px">Check out the new webGL preview!</div>
                 <input onclick="followLink('/preview',true)" type="button" value="webGL preview"
@@ -106,25 +117,6 @@
                   </div>
                   <input type="button" value="+" id="cyEx_additional_layouts"
                     style="width: 10%;font-size: 30px;text-align: center;" onclick=add_layout_selection()></button>
-                  <script>
-                    function add_layout_selection() {
-                      let box = document.getElementById("cyEx_layout_selection_box")
-                      layout_selections += 1
-                      let newDD = document.createElement("cy-ex-layout-selector")
-                      newDD.setAttribute("id", id = "cyEx_lay_sel_" + layout_selections)
-                      newDD.setAttribute("name", layout_selections + ". Layout")
-                      console.log(newDD)
-                      box.appendChild(newDD)
-                    }
-                    function updateAllLayoutSelectors() {
-                      let selectors = document.getElementById("cyEx_layout_selection_box").children
-                      console.log(selectors)
-                      for (var i = 0; i < selectors.length; i++) {
-                        selectors[i].setAttribute("name", i + 1 + ". Layout")
-                        selectors[i].updateName()
-                      }
-                    }
-                  </script>
                 </div>
               </div>
             </div>

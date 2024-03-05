@@ -6,6 +6,7 @@ except ImportError:  # pip < 10.0
 import sys
 from enum import Enum
 
+
 # Tags
 class LayoutTags:
     """
@@ -126,16 +127,28 @@ class LayoutAlgorithms:
     cartoGRAPH_tsne = "tsne"
     cartoGRAPH_umap = "umap"
     cartoGRAPH_functional = "functional"
-
+    cartoGRAPH_local_tsne = f"{cartoGRAPH}_{cartoGRAPH_local}_{cartoGRAPH_tsne}"
+    cartoGRAPH_global_tsne = f"{cartoGRAPH}_{cartoGRAPH_global}_{cartoGRAPH_tsne}"
+    cartoGRAPH_local_umap = f"{cartoGRAPH}_{cartoGRAPH_local}_{cartoGRAPH_umap}"
+    cartoGRAPH_global_umap = f"{cartoGRAPH}_{cartoGRAPH_global}_{cartoGRAPH_umap}"
+    cartoGRAPH_importance_tsne = (
+        f"{cartoGRAPH}_{cartoGRAPH_importance}_{cartoGRAPH_tsne}"
+    )
+    cartoGRAPH_importance_umap = (
+        f"{cartoGRAPH}_{cartoGRAPH_importance}_{cartoGRAPH_umap}"
+    )
+    cartoGRAPH_functional_umap = (
+        f"{cartoGRAPH}_{cartoGRAPH_functional}_{cartoGRAPH_umap}"
+    )
     if "cartoGRAPHs" in [module.split("=")[0] for module in list(freeze.freeze())]:
         all_algos += [
-            f"{cartoGRAPH}_{cartoGRAPH_local}_{cartoGRAPH_tsne}",
-            f"{cartoGRAPH}_{cartoGRAPH_local}_{cartoGRAPH_umap}",
-            f"{cartoGRAPH}_{cartoGRAPH_global}_{cartoGRAPH_tsne}",
-            f"{cartoGRAPH}_{cartoGRAPH_global}_{cartoGRAPH_umap}",
-            f"{cartoGRAPH}_{cartoGRAPH_importance}_{cartoGRAPH_tsne}",
-            f"{cartoGRAPH}_{cartoGRAPH_importance}_{cartoGRAPH_umap}",
-            f"{cartoGRAPH}_{cartoGRAPH_functional}_{cartoGRAPH_umap}",
+            cartoGRAPH_local_tsne,
+            cartoGRAPH_global_tsne,
+            cartoGRAPH_importance_tsne,
+            cartoGRAPH_local_umap,
+            cartoGRAPH_global_umap,
+            cartoGRAPH_importance_umap,
+            cartoGRAPH_functional_umap,
         ]
 
 

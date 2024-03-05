@@ -12,7 +12,7 @@ sys.path.append(os.path.join(_WORKING_DIR, "..", ".."))
 
 import GlobalData as GD
 from PIL import Image
-from project import COLOR, DEFAULT_PFILE, NODE
+from project import COLOR, DEFAULT_PFILE, NODE, Project
 
 from .classes import Evidences as EV
 from .classes import LayoutTags as LT
@@ -45,10 +45,13 @@ class Uploader:
         project: CyExProject,
     ) -> None:
         self.project = project
+        log.debug(f"Project should be overwritten: {self.project.overwrite}")
         if self.project.overwrite:
             self.project.remove()
+            self.project.pfile = None
         if self.project.pfile is None:
             self.project.pfile = DEFAULT_PFILE
+        log.debug(self.project.pfile)
         # TODO: Consider removing
         # if self.stringify:
         #     self.project.pfile["network"] = "string"
@@ -95,12 +98,14 @@ class Uploader:
         colors = all_colors[: self.MAX_NUM_LINKS].copy()
         layout_name = layout.replace("_col", "")
         colors = colors.swifter.progress_bar(False).apply(
-            lambda x: x
-            if x != (0, 0, 0, 0)
-            and x != "<NA>"
-            and x != np.nan
-            and not isinstance(x, float)
-            else pd.NA
+            lambda x: (
+                x
+                if x != (0, 0, 0, 0)
+                and x != "<NA>"
+                and x != np.nan
+                and not isinstance(x, float)
+                else pd.NA
+            )
         )
         colors = colors.fillna(0)
         image = Image.new("RGBA", (512, height))
@@ -166,14 +171,14 @@ class Uploader:
 
         tmp = links.copy()
         tmp["start_pix"] = links[LiT.start].apply(
-            lambda x: (x % 128, x // 128 % 128, x // 16384)
-            if not pd.isnull(x)
-            else (0, 0, 0)
+            lambda x: (
+                (x % 128, x // 128 % 128, x // 16384) if not pd.isnull(x) else (0, 0, 0)
+            )
         )
         tmp["end_pix"] = links[LiT.end].apply(
-            lambda x: (x % 128, x // 128 % 128, x // 16384)
-            if not pd.isnull(x)
-            else (0, 0, 0)
+            lambda x: (
+                (x % 128, x // 128 % 128, x // 16384) if not pd.isnull(x) else (0, 0, 0)
+            )
         )
         path = self.project.location
         layouts = [c for c in links.columns if c.endswith("col")]
@@ -241,6 +246,7 @@ class Uploader:
         layout_name = layout.replace("_pos", "")
         xyz = None
         rgb = None
+        print(pos)
         if pos is not None and pos.any():
             pos = pos.swifter.progress_bar(False).apply(
                 lambda x: [int(float(value) * 65280) for value in x]
@@ -410,26 +416,13 @@ class Uploader:
                 [n] for n in nodes[NT.display_name].tolist()
             ]
         if parallel:
-            node_tex_res, link_tex_res = self.parallel_process(
-                nodes, links, n_lay, l_lay
-            )
+            self.parallel_process(nodes, links, n_lay, l_lay)
         else:
-            node_tex_res = self.make_node_tex(nodes, n_lay)
-            link_tex_res = self.make_link_tex(links, l_lay)
+            self.make_node_tex(nodes, n_lay)
+            self.make_link_tex(links, l_lay)
         state = ""
-        for res in node_tex_res:
-            state += res["out"]
-            if res["xyz"] and res["xyz"] not in self.project.pfile["layouts"]:
-                self.project.pfile["layouts"].append(res["xyz"])
-            if res["rgb"] and res["rgb"] not in self.project.pfile["layoutsRGB"]:
-                self.project.pfile["layoutsRGB"].append(res["rgb"])
+        self.project.init_all_pfile_list()
 
-        for res in link_tex_res:
-            state += res["out"]
-            if res["xyz"] and res["xyz"] not in self.project.pfile["links"]:
-                self.project.pfile["links"].append(res["xyz"])
-            if res["rgb"] and res["rgb"] not in self.project.pfile["linksRGB"]:
-                self.project.pfile["linksRGB"].append(res["rgb"])
         nodes = self.project.network.get(VRNE.nodes, [])
 
         if isinstance(nodes, pd.DataFrame):
@@ -474,7 +467,7 @@ class Uploader:
         self.project.pfile["nodecount"] = len(nodes)
         self.project.pfile["linkcount"] = len(links)
         self.project.write_all_jsons()
-        # #TODO:Consider Removing
+        # #TODO: Consider Removing
         # if self.stringify:
         #     self.stringify_project()
         try:
@@ -626,16 +619,6 @@ class Uploader:
         self.project.add_node_color("Mapped")
 
         self.project.write_all_jsons()
-
-    def update_link_textures(self, links, l_lay, target_links, target_links_rgb):
-        self.make_link_tex(links, l_lay)
-        self.stringify_project(nodes=False)
-        self.project.pfile[PT.links] += [
-            link for link in target_links if "stringdb" not in link
-        ]
-        self.project.pfile[PT.links] += [
-            link for link in target_links_rgb if "stringdb" not in link
-        ]
 
     def change_to_universal_attr(self, nodes: pd.DataFrame) -> dict:
         """Rename STRING DB attributes to vrnetzer universal attributes so they will be displayed at the correct place on the node panel

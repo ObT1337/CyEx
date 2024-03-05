@@ -19,14 +19,14 @@ class CyExProject(Project):
         self,
         name: str,
         network: dict[str : pd.DataFrame] = None,
-        overwrite=True,
+        overwrite: bool = True,
     ):
         super().__init__(name)
         self.network: dict[str : pd.DataFrame] = network
         self.graph: nx.Graph = None
-        self._size: tuple(
-            int, int
-        ) = None  # 2-Tuple (N,L) of N number of nodes and L number of l^inks
+        self._size: tuple(int, int) = (
+            None  # 2-Tuple (N,L) of N number of nodes and L number of l^inks
+        )
         self._n: int = None
         self._l: int = None
         if type(self.network) is dict:
@@ -101,7 +101,7 @@ class CyExProject(Project):
         Returns:
             networkx.Graph: Graph for which the layouts will be generated.
         """
-        network = json.load(open(file))
+        network = json.load(open(file, "r"))
         self.network = network
         nodes = network[VRNE.nodes]
         links = network[VRNE.links]
