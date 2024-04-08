@@ -85,11 +85,11 @@ def cy_ex_upload() -> str:
 def cy_ex_cy_submit():
     # Get JSON data from the request body
     json_data = flask.request.get_json()
-    log.debug(json_data)
+    log.debug("Received data from Cytoscape")
 
     # Generate a unique Job ID
     job_id = str(uuid.uuid4())
-
+    log.debug(f"Data stored under job id:{job_id}")
     # Store the JSON data and settings related to this Job ID
     submitted_jobs[job_id] = json_data
 
