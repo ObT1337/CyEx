@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from project import Project
 
-from . import layout
 from .classes import LayoutAlgorithms as LA
 from .classes import LinkTags as LiT
 from .classes import NodeTags as NT
