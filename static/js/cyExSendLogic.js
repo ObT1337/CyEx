@@ -1,4 +1,3 @@
-const uid = makeid(10);
 let cyExSocket = io.connect("http://" + location.host + "/CyEx");
 cyExSocket.on("status", function(data) {
   console.log(data["message"]);
